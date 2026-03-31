@@ -11,7 +11,7 @@ An **event-driven personal file backup system** built on AWS that automatically 
 
 ## 🏗️ Architecture
 
-![Architecture](Screenshots/file-backup-architecture.png)
+![Architecture](Screenshots/Architecture-diagram.png)
 
 **Workflow:**
 1. User uploads file to S3 source bucket  
@@ -121,19 +121,23 @@ Server-side encryption (SSE-S3) — Enabled
 2️⃣ Create SNS Topic
 
 aws sns create-topic --name FileBackupNotifications
+
 Subscribe your email address:
-aws sns subscribe \
-  -topic-arn arn:aws:sns:us-east-1:YOUR_ACCOUNT_ID:FileBackupNotifications \
-  -protocol email \
+
+aws sns subscribe 
+
+  -topic-arn arn:aws:sns:us-east-1:YOUR_ACCOUNT_ID:FileBackupNotifications
+  -protocol email 
   -notification-endpoint your@email.com
+  
 Check your inbox and confirm the subscription.
 
 3️⃣Create IAM Role for Lambda
 In the AWS Console, create a new IAM role with Lambda as the trusted entity and attach these permissions:
 
 AWSLambdaBasicExecutionRole (AWS managed)
-Custom inline policy for S3 and SNS:
 
+Custom inline policy for S3 and SNS:
 
 {
   "Version": "2012-10-17",
@@ -159,12 +163,12 @@ Custom inline policy for S3 and SNS:
 4️⃣ Create Lambda Function
 
 In the AWS Console:
-Go to Lambda → Create function
-Runtime: Python 3.12
-Attach the IAM role created in Step 3
-Set timeout to 30 seconds (default 3s is insufficient for S3 operations)
-Paste the Lambda code above
-Update BACKUP_BUCKET and SNS_TOPIC_ARN with your actual values
+-Go to Lambda → Create function
+-Runtime: Python 3.12
+-Attach the IAM role created in Step 3
+-Set timeout to 30 seconds (default 3s is insufficient for S3 operations)
+-Paste the Lambda code above
+-Update BACKUP_BUCKET and SNS_TOPIC_ARN with your actual values
 
 5️⃣  Configure S3 Event Trigger
 In the AWS Console:
@@ -197,11 +201,11 @@ CloudWatch logs show a successful execution
 7️⃣ Cleanup (Avoid Ongoing Charges)
    
 Remove all resources when done to avoid charges:
-Empty and delete buckets
-aws s3 rm s3://your-source-bucket --recursive
-aws s3 rm s3://your-backup-bucket --recursive
-aws s3api delete-bucket --bucket your-source-bucket
-aws s3api delete-bucket --bucket your-backup-bucket
+-Empty and delete buckets
+-aws s3 rm s3://your-source-bucket --recursive
+-aws s3 rm s3://your-backup-bucket --recursive
+-aws s3api delete-bucket --bucket your-source-bucket
+-aws s3api delete-bucket --bucket your-backup-bucket
 
 # Delete Lambda function
 aws lambda delete-function --function-name your-function-name
