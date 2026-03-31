@@ -1,8 +1,9 @@
 AWS Personal File Backup System
-https://img.shields.io/badge/AWS-Lambda%20%7C%20S3%20%7C%20SNS%20%7C%20CloudWatch-orange?logo=amazonaws
-https://img.shields.io/badge/Python-3.12-blue?logo=python
-https://img.shields.io/badge/Status-Complete-brightgreen
-https://img.shields.io/badge/Cost-Free%20Tier%20Friendly-yellow
+[https://img.shields.io/badge/AWS-Lambda%20%7C%20S3%20%7C%20SNS%20%7C%20CloudWatch-orange?logo=amazonaws]
+[https://img.shields.io/badge/Python-3.12-blue?logo=python]
+[https://img.shields.io/badge/Status-Complete-brightgreen]
+[https://img.shields.io/badge/Cost-Free%20Tier%20Friendly-yellow]
+
 An event-driven personal file backup system built on AWS that automatically copies files from a source S3 bucket to a backup bucket and sends email notifications upon successful backup.
 
 Architecture
@@ -15,9 +16,8 @@ flowchart TD
     C -- Log Activity --> G[AWS CloudWatch]
     H[AWS IAM] -- Provides Permissions --> C
 
-ServiceRoleAmazon S3Source and backup storage bucketsAWS LambdaCore automation — triggers on upload, copies file, publishes notificationAmazon SNSEmail notification deliveryAWS CloudWatchLogging and monitoringAWS IAMLeast-privilege permissions for Lambda
+[https://raw.githubusercontent.com/DelawoeAmevinya/AWS-Personal-File-Backup-System/main/Screenshots/file%20backup%20architecture.png]
 
-Screenshots/file backup architecture.png
 
 Features
 Automated file backup triggered on every upload
@@ -107,7 +107,7 @@ Create two buckets: one as the source and one as the backup.
 bash# Source bucket
 aws s3api create-bucket --bucket your-source-bucket \
   --region us-east-1
-  Screenshots/main s3 bucket.png
+  [Screenshots/main s3 bucket.png]
 
  Backup bucket
 aws s3api create-bucket --bucket your-backup-bucket \
@@ -116,7 +116,7 @@ For both buckets, enable the following in the AWS Console under bucket settings:
 
 Block all public access — ON
 Server-side encryption (SSE-S3) — Enabled
-Screenshots/s3 backup screenshot.png
+[Screenshots/s3 backup screenshot.png]
 
 Step 2 — Create an SNS Topic
 bashaws sns create-topic --name FileBackupNotifications
@@ -178,9 +178,9 @@ Step 6 — Test the System
 Upload a test file to your source bucket:
 bashaws s3 cp testfile.txt s3://your-source-bucket/
 Then verify:
-Screenshots/Email Notification.png
+[Screenshots/Email Notification.png]
 log events
-Screenshots/Log events.png
+[Screenshots/Log events.png]
 
 The file appears in your backup bucket with a timestamp prefix
 You receive an email notification
