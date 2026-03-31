@@ -70,19 +70,19 @@ def lambda_handler(event, context):
         event['Records'][0]['s3']['object']['key']
     )
 
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+ timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     backup_key = f"backup_{timestamp}_{file_key}"
 
-    try:
+try:
         s3.copy_object(
             CopySource={'Bucket': source_bucket, 'Key': file_key},
             Bucket=BACKUP_BUCKET,
             Key=backup_key
         )
 
-        logger.info(f"Backed up {file_key}")
+ logger.info(f"Backed up {file_key}")
 
-        sns.publish(
+sns.publish(
             TopicArn=SNS_TOPIC_ARN,
             Subject='✅ File Backup Successful',
             Message=(
@@ -92,11 +92,12 @@ def lambda_handler(event, context):
             )
         )
 
-        return {'statusCode': 200}
+ return {'statusCode': 200}
 
-    except Exception as e:
+except Exception as e:
         logger.error(str(e))
         raise
+        
 🛠️ Setup Instructions
 
 1️⃣ Create S3 Buckets
@@ -118,21 +119,24 @@ Attach:
 
 AWSLambdaBasicExecutionRole
 Custom policy (S3 + SNS access)
+
 4️⃣ Create Lambda Function
 Runtime: Python 3.12
 Timeout: 30 seconds
 Add environment variables
+
 5️⃣ Configure S3 Trigger
 Event: s3:ObjectCreated:*
 Destination: Lambda
+
 6️⃣ Test System
 aws s3 cp testfile.txt s3://your-source-bucket/
 
 📸 Results:
-1. ![Email20%Notification](Screenshots/Email20%Notification.png)
-2. ![Log20%Events](Screenshots/Log20%events.png)
-3. ![Main20%s320%Bucket](Screenshots/main20%s320%bucket.png)
-4. ![s320%backup20%Screenshot](Screenshots/s320%backup20%screenshot.png)
+1. ![Email Notification](Screenshots/Email20%Notification.png)
+2. ![Log Events](Screenshots/Log20%events.png)
+3. ![Main s3 Bucket](Screenshots/main20%s320%bucket.png)
+4. ![s3 backup Screenshot](Screenshots/s320%backup20%screenshot.png)
 
 
 💰 Cost
@@ -153,6 +157,7 @@ IAM least privilege is critical
 Lambda timeout must be increased
 Handle special characters in filenames
 Use timestamps to prevent overwrite
+
 👤 Author
 
 Delawoe Amevinya Kwasi
