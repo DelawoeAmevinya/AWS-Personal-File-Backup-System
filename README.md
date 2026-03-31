@@ -11,7 +11,7 @@ An **event-driven personal file backup system** built on AWS that automatically 
 
 ## 🏗️ Architecture
 
-![Architecture](Screenshots/file%20backup%20architecture.png)
+![Architecture](Screenshots/file-backup-architecture.png)
 
 **Workflow:**
 1. User uploads file to S3 source bucket  
@@ -119,6 +119,7 @@ Block all public access — ON
 Server-side encryption (SSE-S3) — Enabled
 
 2️⃣ Create SNS Topic
+
 aws sns create-topic --name FileBackupNotifications
 Subscribe your email address:
 aws sns subscribe \
@@ -132,6 +133,8 @@ In the AWS Console, create a new IAM role with Lambda as the trusted entity and 
 
 AWSLambdaBasicExecutionRole (AWS managed)
 Custom inline policy for S3 and SNS:
+
+
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -182,12 +185,17 @@ You receive an email notification
 CloudWatch logs show a successful execution
 
 📸 Results:
+
 1. ![Email Notification](Screenshots/email-notification.png)
+   
 2. ![Log Events](Screenshots/log-events.png)
+   
 3. ![Main s3 Bucket](Screenshots/main-s3-bucket.png)
+   
 4. ![s3 backup Screenshot](Screenshots/s3-backup-screenshot.png)
 
-7. Cleanup (Avoid Ongoing Charges)
+7️⃣ Cleanup (Avoid Ongoing Charges)
+   
 Remove all resources when done to avoid charges:
 Empty and delete buckets
 aws s3 rm s3://your-source-bucket --recursive
@@ -204,6 +212,7 @@ aws sns delete-topic --topic-arn arn:aws:sns:us-east-1:YOUR_ACCOUNT_ID:FileBacku
 # Delete IAM role (detach policies first via Console)
 
 💰 Cost Analysis
+
 This project runs comfortably within the AWS Free Tier for personal use.
 | Service    | Usage   |
 | ---------- | ------- |
@@ -213,15 +222,17 @@ This project runs comfortably within the AWS Free Tier for personal use.
 | CloudWatch | Minimal |
 
 📚 Lessons Learned
-Security first (encryption + block public access)
-IAM least privilege is critical
-Lambda timeout must be increased
-Handle special characters in filenames
-Use timestamps to prevent overwrite
+
+-Security first (encryption + block public access)
+-IAM least privilege is critical
+-Lambda timeout must be increased
+-Handle special characters in filenames
+-Use timestamps to prevent overwrite
 
 👤 Author
 
 Delawoe Amevinya Kwasi
 
 LinkedIn: https://linkedin.com/in/delawoe-amevinya-kwasi
+
 Email: amevinyadelawoe@gmail.com
