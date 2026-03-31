@@ -129,11 +129,10 @@ Destination: Lambda
 aws s3 cp testfile.txt s3://your-source-bucket/
 
 📸 Results:
-1. Email Notification
-!(Screenshots/Email-Notification.png)
-
-
-
+1. ![Email20%Notification](Screenshots/Email20%Notification.png)
+2. ![Log20%Events](Screenshots/Log20%events.png)
+3. ![Main20%s320%Bucket](Screenshots/main20%s320%bucket.png)
+4. ![s320%backup20%Screenshot](Screenshots/s320%backup20%screenshot.png)
 
 
 💰 Cost
