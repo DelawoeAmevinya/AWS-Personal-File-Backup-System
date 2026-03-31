@@ -24,13 +24,13 @@ An **event-driven personal file backup system** built on AWS that automatically 
 
 ## 🚀 Features
 
-- ✅ Automated file backup on upload  
-- 🕒 Timestamped filenames (prevents overwrite)  
-- 📧 Email notifications via SNS  
-- 📊 CloudWatch logging  
-- 🔐 Least-privilege IAM security  
-- 🔒 Encryption enabled (SSE-S3)  
-- 🚫 Public access blocked  
+-Automated file backup triggered on every upload
+-Timestamped filenames to prevent overwrites
+-Email notifications via SNS on successful backup
+-Comprehensive CloudWatch logging for all operations
+-Secure IAM configuration with least-privilege access
+-Encryption enabled on both S3 buckets
+-Public access blocked by default
 
 ---
 
@@ -48,8 +48,6 @@ AWS-Personal-File-Backup-System/
 
 ---
 ## ⚙️ Lambda Function (Core Logic)
-
-python
 import boto3
 import urllib.parse
 import logging
@@ -65,91 +63,154 @@ BACKUP_BUCKET = 'your-backup-bucket-name'
 SNS_TOPIC_ARN = 'arn:aws:sns:your-region:your-account-id:your-topic-name'
 
 def lambda_handler(event, context):
+    # Extract source bucket and file key from the S3 event
     source_bucket = event['Records'][0]['s3']['bucket']['name']
     file_key = urllib.parse.unquote_plus(
         event['Records'][0]['s3']['object']['key']
     )
 
- timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    # Generate a timestamped backup filename to prevent overwrites
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     backup_key = f"backup_{timestamp}_{file_key}"
 
-try:
+    try:
+        # Copy file from source to backup bucket
         s3.copy_object(
             CopySource={'Bucket': source_bucket, 'Key': file_key},
             Bucket=BACKUP_BUCKET,
             Key=backup_key
         )
+        logger.info(f"Successfully backed up {file_key} to {BACKUP_BUCKET}/{backup_key}")
 
- logger.info(f"Backed up {file_key}")
-
-sns.publish(
+        # Send SNS email notification
+        sns.publish(
             TopicArn=SNS_TOPIC_ARN,
-            Subject='✅ File Backup Successful',
+            Subject='File Backup Successful',
             Message=(
-                f"Original: s3://{source_bucket}/{file_key}\n"
-                f"Backup: s3://{BACKUP_BUCKET}/{backup_key}\n"
-                f"Time: {timestamp}"
+                f"File backup completed successfully.\n\n"
+                f"Original File: s3://{source_bucket}/{file_key}\n"
+                f"Backup Location: s3://{BACKUP_BUCKET}/{backup_key}\n"
+                f"Timestamp: {timestamp}"
             )
         )
 
- return {'statusCode': 200}
+        return {'statusCode': 200, 'body': 'Backup successful'}
 
-except Exception as e:
-        logger.error(str(e))
+    except Exception as e:
+        logger.error(f"Backup failed for {file_key}: {str(e)}")
         raise
         
 🛠️ Setup Instructions
 
+Prerequisites
+
+-AWS account (free tier is sufficient)
+-AWS CLI installed and configured
+-Basic familiarity with the AWS Console
+
 1️⃣ Create S3 Buckets
+Create two buckets: one as the source and one as the backup.
 aws s3api create-bucket --bucket your-source-bucket --region us-east-1
 aws s3api create-bucket --bucket your-backup-bucket --region us-east-1
 
+For both buckets, enable the following in the AWS Console under bucket settings:
+
+Block all public access — ON
+Server-side encryption (SSE-S3) — Enabled
+
 2️⃣ Create SNS Topic
 aws sns create-topic --name FileBackupNotifications
-
-Subscribe email:
-
+Subscribe your email address:
 aws sns subscribe \
-  --topic-arn YOUR_TOPIC_ARN \
-  --protocol email \
-  --notification-endpoint your@email.com
-3️⃣ Configure IAM Role
+  -topic-arn arn:aws:sns:us-east-1:YOUR_ACCOUNT_ID:FileBackupNotifications \
+  -protocol email \
+  -notification-endpoint your@email.com
+Check your inbox and confirm the subscription.
 
-Attach:
+3️⃣Create IAM Role for Lambda
+In the AWS Console, create a new IAM role with Lambda as the trusted entity and attach these permissions:
 
-AWSLambdaBasicExecutionRole
-Custom policy (S3 + SNS access)
+AWSLambdaBasicExecutionRole (AWS managed)
+Custom inline policy for S3 and SNS:
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::your-source-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::your-backup-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sns:Publish"],
+      "Resource": "arn:aws:sns:us-east-1:YOUR_ACCOUNT_ID:FileBackupNotifications"
+    }
+  ]
+}
 
 4️⃣ Create Lambda Function
+
+In the AWS Console:
+Go to Lambda → Create function
 Runtime: Python 3.12
-Timeout: 30 seconds
-Add environment variables
+Attach the IAM role created in Step 3
+Set timeout to 30 seconds (default 3s is insufficient for S3 operations)
+Paste the Lambda code above
+Update BACKUP_BUCKET and SNS_TOPIC_ARN with your actual values
 
-5️⃣ Configure S3 Trigger
-Event: s3:ObjectCreated:*
-Destination: Lambda
+5️⃣  Configure S3 Event Trigger
+In the AWS Console:
 
-6️⃣ Test System
+Go to your source S3 bucket → Properties → Event notifications
+Create a new notification with the following settings:
+
+Event type: s3:ObjectCreated:*
+Destination: Lambda function → select your function 
+
+6️⃣ Test the System
+Upload a test file to your source bucket:
 aws s3 cp testfile.txt s3://your-source-bucket/
+Then verify each component worked:
+
+The file appears in your backup bucket with a timestamp prefix
+You receive an email notification
+CloudWatch logs show a successful execution
 
 📸 Results:
-1. ![Email Notification](Screenshots/Email20%Notification.png)
-2. ![Log Events](Screenshots/Log20%events.png)
-3. ![Main s3 Bucket](Screenshots/main20%s320%bucket.png)
-4. ![s3 backup Screenshot](Screenshots/s320%backup20%screenshot.png)
+1. ![Email Notification](Screenshots/email-notification.png)
+2. ![Log Events](Screenshots/log-events.png)
+3. ![Main s3 Bucket](Screenshots/main-s3-bucket.png)
+4. ![s3 backup Screenshot](Screenshots/s3-backup-screenshot.png)
 
+7. Cleanup (Avoid Ongoing Charges)
+Remove all resources when done to avoid charges:
+Empty and delete buckets
+aws s3 rm s3://your-source-bucket --recursive
+aws s3 rm s3://your-backup-bucket --recursive
+aws s3api delete-bucket --bucket your-source-bucket
+aws s3api delete-bucket --bucket your-backup-bucket
 
-💰 Cost
+# Delete Lambda function
+aws lambda delete-function --function-name your-function-name
 
-Runs within AWS Free Tier:
+# Delete SNS topic
+aws sns delete-topic --topic-arn arn:aws:sns:us-east-1:YOUR_ACCOUNT_ID:FileBackupNotifications
 
-Service	Usage
-S3	Minimal
-Lambda	Minimal
-SNS	Minimal
-CloudWatch	Minimal
+# Delete IAM role (detach policies first via Console)
 
-💵 Estimated: $0 – $2/month
+💰 Cost Analysis
+This project runs comfortably within the AWS Free Tier for personal use.
+| Service    | Usage   |
+| ---------- | ------- |
+| S3         | Minimal |
+| Lambda     | Minimal |
+| SNS        | Minimal |
+| CloudWatch | Minimal |
 
 📚 Lessons Learned
 Security first (encryption + block public access)
